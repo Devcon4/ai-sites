@@ -1,0 +1,24 @@
+version: '3.7'
+
+services:
+
+  proxy:
+    image: devync/ai-reverse-proxy
+    build: ./
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+    ports:
+      - 4210:4210
+    environment:
+      VERSION: latest
+
+  notebook:
+    depends_on:
+      - proxy
+    image: jupyter/tensorflow-notebook
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
