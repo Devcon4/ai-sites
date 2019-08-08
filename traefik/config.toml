@@ -1,0 +1,34 @@
+defaultEntryPoints = ["http"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":4210"
+
+  [entryPoints.dash]
+  address = ":8080"
+
+  [entryPoints.notebook]
+  address = ":8888"
+  [entryPoints.notebook.redirect]
+  entryPoint = "http"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+watch = true
+swarmMode = true
+
+[api]
+endpoint = "dash"
+dashboard = true
+
+[file]
+    [backends]
+        [backends.api]
+            [backends.api.server.server1]
+            url = "http://notebook:8080"
+    [frontends]
+        [frontends.path]
+        entryPoints = ["dash"]
+        backend = "api"
+        [frontends.path.routes.api]
+        rule = "PathPrefix:/api"

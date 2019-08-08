@@ -2,22 +2,33 @@ version: '3.7'
 
 services:
 
-  proxy:
-    image: devync/ai-reverse-proxy
-    build: ./
-    deploy:
-      replicas: 3
-      restart_policy:
-        condition: on-failure
+  traefik:
+    image: devync/traefik
+    build: ./traefik/
     ports:
-      - 4210:4210
-    environment:
-      VERSION: latest
+      - 4210:80
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # proxy:
+  #   image: devync/ai-reverse-proxy
+  #   build: ./nginx/
+  #   container_name: ai-proxy
+  #   deploy:
+  #     replicas: 3
+  #     restart_policy:
+  #       condition: on-failure
+  #   # ports:
+  #     # - 4210:4210
+  #   environment:
+  #     VERSION: latest
 
   notebook:
     depends_on:
-      - proxy
-    image: jupyter/tensorflow-notebook
+      - traefik
+    image: devync/jupyterhub
+    build: ./notebook/
+    container_name: ai-notebook
     deploy:
       replicas: 3
       restart_policy:
