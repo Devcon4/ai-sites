@@ -1,3 +1,3 @@
 FROM traefik
 
-COPY config.toml /etc/traefik/traefik.toml
+# COPY config.toml /etc/traefik/traefik.toml

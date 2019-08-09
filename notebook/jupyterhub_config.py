@@ -1,6 +1,24 @@
 # Configuration file for jupyterhub.
-c = get_config()
+import os
 
+c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
+c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_IMAGE']
+c.DockerSpawner.network_name = os.environ['DOCKER_NETWORK_NAME']
+c.JupyterHub.hub_ip = os.environ['HUB_IP']
+c.LDAPAuthenticator.server_address = 'cen.centeva.com'
+c.LDAPAuthenticator.bind_dn_template = []
+c.JupyterHub.authenticator_class = 'ldapauthenticator.LDAPAuthenticator'
+c.Spawner.default_url = '/lab'
+notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+c.DockerSpawner.notebook_dir = notebook_dir
+c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+c.JupyterHub.services = [
+    {
+        'name': 'cull_idle',
+        'admin': True,
+        'command': 'python /srv/jupyterhub/cull_idle_servers.py --timeout=3600'.split(),
+    },
+]
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
 #------------------------------------------------------------------------------
@@ -88,7 +106,7 @@ c = get_config()
 #    - dummy: jupyterhub.auth.DummyAuthenticator
 #    - pam: jupyterhub.auth.PAMAuthenticator
 #    - default: jupyterhub.auth.PAMAuthenticator
-c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
+# c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
 
 ## The base URL of the entire application.
 #  
@@ -97,12 +115,12 @@ c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
 #  
 #  .. deprecated: 0.9
 #      Use JupyterHub.bind_url
-c.JupyterHub.base_url = '/notebook'
+# c.JupyterHub.base_url = '/notebook'
 
 ## The public facing URL of the whole JupyterHub application.
 #  
 #  This is the address on which the proxy will bind. Sets protocol, ip, base_url
-c.JupyterHub.bind_url = 'http://notebook:8000'
+# c.JupyterHub.bind_url = 'http://notebook:8000'
 
 ## Whether to shutdown the proxy when the Hub shuts down.
 #  
@@ -564,7 +582,7 @@ c.JupyterHub.bind_url = 'http://notebook:8000'
 #  Some spawners allow shell-style expansion here, allowing you to use
 #  environment variables. Most, including the default, do not. Consult the
 #  documentation for your spawner to verify!
-c.Spawner.cmd = ['jupyterhub-singleuser']
+# c.Spawner.cmd = ['jupyterhub-singleuser']
 
 ## Maximum number of consecutive failures to allow before shutting down
 #  JupyterHub.

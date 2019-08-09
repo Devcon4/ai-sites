@@ -1,34 +1,24 @@
-defaultEntryPoints = ["http"]
+debug = true
 
+defaultEntryPoints = ["https","http"]
+
+# Redirect HTTP -> HTTPS, install certificates
 [entryPoints]
   [entryPoints.http]
-  address = ":4210"
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+  [entryPoints.https]
+  address = ":443"
+    [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      certFile = "/etc/certs/server.crt"
+      keyFile = "/etc/certs/server.key"
 
-  [entryPoints.dash]
-  address = ":8080"
-
-  [entryPoints.notebook]
-  address = ":8888"
-  [entryPoints.notebook.redirect]
-  entryPoint = "http"
-
+# Activate docker API
 [docker]
-endpoint = "unix:///var/run/docker.sock"
+domain = "docker.local"
 watch = true
-swarmMode = true
 
+# Activate Traefik dashboard
 [api]
-endpoint = "dash"
-dashboard = true
-
-[file]
-    [backends]
-        [backends.api]
-            [backends.api.server.server1]
-            url = "http://notebook:8080"
-    [frontends]
-        [frontends.path]
-        entryPoints = ["dash"]
-        backend = "api"
-        [frontends.path.routes.api]
-        rule = "PathPrefix:/api"
