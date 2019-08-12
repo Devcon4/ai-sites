@@ -1,24 +1,15 @@
 debug = true
 
-defaultEntryPoints = ["https","http"]
-
-# Redirect HTTP -> HTTPS, install certificates
-[entryPoints]
-  [entryPoints.http]
-  address = ":80"
-    [entryPoints.http.redirect]
-    entryPoint = "https"
-  [entryPoints.https]
-  address = ":443"
-    [entryPoints.https.tls]
-      [[entryPoints.https.tls.certificates]]
-      certFile = "/etc/certs/server.crt"
-      keyFile = "/etc/certs/server.key"
+defaultEntryPoints = ["http"]
 
 # Activate docker API
 [docker]
+# swarmMode = true
+# exposedByDefault = false
+endpoint = "unix:///var/run/docker.sock"
 domain = "docker.local"
 watch = true
 
 # Activate Traefik dashboard
 [api]
+  dashboard=true

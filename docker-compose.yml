@@ -3,38 +3,55 @@ version: '3.7'
 services:
 
   traefik:
+    build: ./traefik/
     image: devync/traefik
-    build: ./traefik
+    depends_on:
+      - jupyterhub
     ports:
       - 4210:80
-      - 4220:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    networks:
+      default:
     labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=PathPrefix:/api"
-      - "traefik.port=8080"
+      - traefik.enable=true
+      - traefik.docker.network=ai_default
+      - traefik.frontend.rule=PathPrefixStrip:/api
+      - traefik.port=8080
 
   jupyterhub:
     build: ./notebook/                # Build the container from this folder.
     image: devync/jupyterhub
+    hostname: jupyterhub
+    ports:
+      - 4220:8000
     container_name: jupyterhub   # The service will use this container name.
     volumes:                         # Give access to Docker socket.
       - /var/run/docker.sock:/var/run/docker.sock
-      - jupyterhub_data:/srv/jupyterhub
+      # - jupyterhub_data:/srv/jupyterhub
     environment:                     # Env variables passed to the Hub process.
-      DOCKER_NETWORK_NAME: ${COMPOSE_PROJECT_NAME}_default
-      HUB_IP: ai.cen.centeva.com
-      DOCKER_JUPYTER_IMAGE: jupyter/tensorflow-notebook
+      - DOCKER_NETWORK_NAME=ai_default
+      - DOCKER_JUPYTER_IMAGE=jupyter/tensorflow-notebook
+      - HUB_IP=jupyterhub
+      - HOST
     labels:                          # Traefik configuration.
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=PathPrefix:/hub"
-      - "traefik.docker.network=${COMPOSE_PROJECT_NAME}_default"
+      - traefik.enable=true
+      - traefik.backend=jupyterhub
+      - traefik.docker.network=ai_default
+      - traefik.frontend.rule=PathPrefix:/hub
+      - traefik.port=8081
     networks:
       default:
-      jupyter:
-        aliases:
-          - jupyterhub
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
 
   jupyterlab:
     image: jupyter/tensorflow-notebook

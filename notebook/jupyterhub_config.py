@@ -1,24 +1,44 @@
+print("hub config!")
 # Configuration file for jupyterhub.
 import os
 
-c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
+c.JupyterHub.log_level = 'DEBUG'
+c.Spawner.debug = True
+c.JupyterHub.authenticator_class = 'ldapauthenticator.LDAPAuthenticator'
+
+c.LDAPAuthenticator.lookup_dn = True
+c.LDAPAuthenticator.lookup_dn_search_filter = '({login_attr}={login})'
+c.LDAPAuthenticator.user_search_base = 'OU=logan,OU=cenUsers,DC=cen,DC=centeva,DC=com'
+c.LDAPAuthenticator.user_attribute = 'sAMAccountName'
+c.LDAPAuthenticator.lookup_dn_user_dn_attribute = 'CN'
+c.LDAPAuthenticator.escape_userdn = False
+
+c.LDAPAuthenticator.server_address = 'ldaps://cen.centeva.com'
+c.LDAPAuthenticator.bind_dn_template = []
+
+c.JupyterHub.spawner_class = 'dockerspawner.SwarmSpawner'
 c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_IMAGE']
 c.DockerSpawner.network_name = os.environ['DOCKER_NETWORK_NAME']
+network_name = os.environ['DOCKER_NETWORK_NAME']
 c.JupyterHub.hub_ip = os.environ['HUB_IP']
-c.LDAPAuthenticator.server_address = 'cen.centeva.com'
-c.LDAPAuthenticator.bind_dn_template = []
-c.JupyterHub.authenticator_class = 'ldapauthenticator.LDAPAuthenticator'
+c.SwarmSpawner.network_name = network_name
+c.SwarmSpawner.extra_host_config = {'network_mode': network_name}
 c.Spawner.default_url = '/lab'
-notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
-c.DockerSpawner.notebook_dir = notebook_dir
-c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
-c.JupyterHub.services = [
-    {
-        'name': 'cull_idle',
-        'admin': True,
-        'command': 'python /srv/jupyterhub/cull_idle_servers.py --timeout=3600'.split(),
-    },
-]
+
+# c.JupyterHub.base_url = '/network'
+# notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+# c.DockerSpawner.notebook_dir = notebook_dir
+# c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+# c.JupyterHub.services = [
+#     {
+#         'name': 'cull_idle', 
+#         'admin': True,
+#         'command': 'python /srv/jupyterhub/cull_idle_servers.py --timeout=3600'.split(),
+#     },
+# ]
+
+print("full file!")
+print(c)
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
 #------------------------------------------------------------------------------
