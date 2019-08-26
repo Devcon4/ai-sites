@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+
+  # traefik:
+  #   build: ../traefik/
+  #   image: devync/traefik
+  #   ports:
+  #     - 8081:80
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   deploy:
+  #     replicas: 1
+  #     placement:
+  #       constraints:
+  #         - node.role == manager
+  #   networks:
+  #     default:
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.docker.network=devyn_default
+  #     - traefik.frontend.rule=PathPrefixStrip:/api
+  #     - traefik.port=8080
+
+  notebook:
+    build: ./personal-notebook
+    image: devync/personal-notebook
+    ports:
+      - 8081:8888
+    # depends_on: 
+    #   - traefik
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+    volumes:
+      - devync_data:/home/jovyan/work
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+    # labels:
+    #   - traefik.enable=true
+    #   - traefik.docker.network=devyn_default
+    #   - traefik.frontend.rule=PathPrefixStrip:/notebook
+    #   - traefik.port=8888
+
+volumes:
+  devync_data:

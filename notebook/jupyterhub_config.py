@@ -5,27 +5,41 @@ import os
 c.JupyterHub.log_level = 'DEBUG'
 c.Spawner.debug = True
 c.JupyterHub.authenticator_class = 'ldapauthenticator.LDAPAuthenticator'
+# c.JupyterHub.authenticator_class = 'dummyauthenticator.DummyAuthenticator'
+
+c.Authenticator.admin_users = ['devyn.cyphers']
 
 c.LDAPAuthenticator.lookup_dn = True
 c.LDAPAuthenticator.lookup_dn_search_filter = '({login_attr}={login})'
-c.LDAPAuthenticator.user_search_base = 'OU=logan,OU=cenUsers,DC=cen,DC=centeva,DC=com'
+c.LDAPAuthenticator.user_search_base = 'DC=cen,DC=centeva,DC=com'
 c.LDAPAuthenticator.user_attribute = 'sAMAccountName'
+c.LDAPAuthenticator.use_ssl = False
 c.LDAPAuthenticator.lookup_dn_user_dn_attribute = 'CN'
 c.LDAPAuthenticator.escape_userdn = False
+c.LDAPAuthenticator.lookup_dn_search_user = os.environ.get('LDAP_USER')
+c.LDAPAuthenticator.lookup_dn_search_password = os.environ.get('LDAP_PASS')
 
-c.LDAPAuthenticator.server_address = 'ldaps://cen.centeva.com'
-c.LDAPAuthenticator.bind_dn_template = []
+c.LDAPAuthenticator.server_address = '10.6.110.3'
+c.LDAPAuthenticator.bind_dn_template = ['']
 
-c.JupyterHub.spawner_class = 'dockerspawner.SwarmSpawner'
+c.JupyterHub.spawner_class = 'dockerspawner.DockerSpawner'
 c.DockerSpawner.image = os.environ['DOCKER_JUPYTER_IMAGE']
 c.DockerSpawner.network_name = os.environ['DOCKER_NETWORK_NAME']
+c.DockerSpawner.hub_connect_ip = os.environ['HUB_IP']
+c.DockerSpawner.use_internal_ip = True
+c.DockerSpawner.remove_containers = True
 network_name = os.environ['DOCKER_NETWORK_NAME']
-c.JupyterHub.hub_ip = os.environ['HUB_IP']
+c.JupyterHub.hub_ip = '0.0.0.0'
 c.SwarmSpawner.network_name = network_name
 c.SwarmSpawner.extra_host_config = {'network_mode': network_name}
 c.Spawner.default_url = '/lab'
+c.JupyterHub.base_url = '/jupyter'
 
-# c.JupyterHub.base_url = '/network'
+c.ConfigurableHTTPProxy.debug = True
+# c.JupyterHub.proxy_api_ip = '0.0.0.0'
+c.ConfigurableHTTPProxy.command = ['configurable-http-proxy', '--insecure']
+# c.ConfigurableHTTPProxy.command = 'configurable-http-proxy --auto-rewrite --ip 127.0.0.1 --port 8000 --api-ip 127.0.0.1 --api-port 8001 --log-level debug --error-target http://jupyterhub:8081/hub/error'.split()
+
 # notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 # c.DockerSpawner.notebook_dir = notebook_dir
 # c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }

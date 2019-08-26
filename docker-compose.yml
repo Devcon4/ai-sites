@@ -2,51 +2,53 @@ version: '3.7'
 
 services:
 
-  traefik:
-    build: ./traefik/
-    image: devync/traefik
-    depends_on:
-      - jupyterhub
-    ports:
-      - 4210:80
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-    networks:
-      default:
-    labels:
-      - traefik.enable=true
-      - traefik.docker.network=ai_default
-      - traefik.frontend.rule=PathPrefixStrip:/api
-      - traefik.port=8080
+  # traefik:
+  #   build: ./traefik/
+  #   image: devync/traefik
+  #   networks:
+  #     default:
+  #   # ports:
+  #     # - 4210:80
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   deploy:
+  #     replicas: 1
+  #     placement:
+  #       constraints:
+  #         - node.role == manager
+  #   labels:
+  #     - traefik.enable=true
+  #     - traefik.docker.network=ai_default
+  #     - traefik.frontend.rule=PathPrefixStrip:/api
+  #     - traefik.port=8080
 
   jupyterhub:
     build: ./notebook/                # Build the container from this folder.
     image: devync/jupyterhub
     hostname: jupyterhub
+    networks:
+      default:
     ports:
-      - 4220:8000
+      - 4210:8000
     container_name: jupyterhub   # The service will use this container name.
     volumes:                         # Give access to Docker socket.
       - /var/run/docker.sock:/var/run/docker.sock
       # - jupyterhub_data:/srv/jupyterhub
+    env_file:
+      - .env
     environment:                     # Env variables passed to the Hub process.
       - DOCKER_NETWORK_NAME=ai_default
       - DOCKER_JUPYTER_IMAGE=jupyter/tensorflow-notebook
+      - DOCKER_NOTEBOOK_DIR=jupyterhub_data
       - HUB_IP=jupyterhub
-      - HOST
-    labels:                          # Traefik configuration.
-      - traefik.enable=true
-      - traefik.backend=jupyterhub
-      - traefik.docker.network=ai_default
-      - traefik.frontend.rule=PathPrefix:/hub
-      - traefik.port=8081
-    networks:
-      default:
+      - HOST=ai.cen.centeva.com
+    # labels:                          # Traefik configuration.
+    #   - traefik.enable=true
+    #   - traefik.backend=jupyterhub
+    #   - traefik.docker.network=ai_default
+    #   - traefik.frontend.rule=Host:ai.cen.centeva.com
+    #   - traefik.port=8000
+
     deploy:
       replicas: 1
       placement:
@@ -61,6 +63,9 @@ volumes:
   jupyterhub_data:
 
 networks:
+  default:
+    driver: overlay
+    attachable: true
   jupyter:
     internal: true
 
